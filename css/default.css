@@ -1,0 +1,56 @@
+body {
+    background-color: #F1F1F1;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+ul {
+    padding-left: 0
+}
+
+#row {
+    display: flex;
+    width: 800px;
+    margin: 20px auto 0;
+}
+
+#sidebar {
+    background-color: #fff;
+    width: 25%;
+    margin-right: 10px;
+    padding: 30px 15px;
+}
+
+#main {
+    background-color: #fff;
+    padding-top: 30px;
+    width: 75%;
+}
+
+#statusMessage {
+    text-align: center;
+    height: 30px;
+}
+
+#statusMessage span {
+    opacity: 1;
+    transition: opacity 1s;
+}
+
+#statusMessage span.fade {
+    opacity: 0;
+}
+
+#container {
+    margin: 30px auto;
+    width: 200px;
+}
+
+#test {
+    font-size: 36px;
+    text-align: center;
+}
+
+#tab {
+    text-align: center;
+    padding: 30px;
+}
