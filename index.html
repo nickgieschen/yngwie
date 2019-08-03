@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Guitar</title>
+    <link type="text/css" rel="stylesheet" href="http://jtab.tardate.com/css/jtab-helper.css"/>
+
+    <!-- mandatory script includes for jtab -->
+    <script src="http://jtab.tardate.com/javascripts/jquery.js" type="text/javascript"></script>
+    <script src="http://jtab.tardate.com/javascripts/raphael.js" type="text/javascript"></script>
+    <script src="http://jtab.tardate.com/javascripts/jtab.js" type="text/javascript"></script>
+    <script>
+      let settings = {
+        randomize: true,
+        interval: 1500,
+        delayForTab: 0,
+        repeat: true,
+        speedChange: 500
+      };
+
+      let commands = {
+        "pause": () => pause(),
+        "continue": () => cont(),
+        "slow down": () => slowDown(),
+        "speed up": () => speedUp()
+      };
+
+      let runner = null;
+      let tests = ["C", "F", "G", "D"];
+      let nextIndex = 0;
+      let displayTestTimeout;
+
+      function nextTest() {
+        // todo randomize
+        let test = tests[nextIndex];
+        nextIndex++;
+        if (nextIndex === tests.length) {
+          nextIndex = 0;
+          if (!settings.repeat) {
+            console.log("not repeating");
+            clearInterval(runner);
+          }
+        }
+        return test;
+      }
+
+      function pause() {
+        clearTimeout(displayTestTimeout);
+        displayStatusMessage("Pausing...")
+      }
+
+      function cont() {
+        displayTest()
+        displayStatusMessage("Continuing...")
+      }
+
+      function slowDown() {
+        settings.interval += settings.speedChange;
+        displayStatusMessage(`Slowing to ${settings.interval} ms...`)
+      }
+
+      function speedUp() {
+        let newInterval = settings.interval - settings.speedChange;
+        if (newInterval > 0) {
+          settings.interval = newInterval;
+          displayStatusMessage(`Speeding up to ${settings.interval} ms...`)
+        } else {
+          displayStatusMessage("Can't speed up any more.")
+        }
+      }
+
+      function displayStatusMessage(message) {
+        let span = document.createElement("span");
+        span.innerText = message;
+        let statusMessageEl = document.getElementById("statusMessage");
+        statusMessageEl.innerHTML = "";
+        statusMessageEl.appendChild(span);
+        window.setTimeout(() => span.classList.toggle("fade"), 1500)
+      }
+
+      function displayTest() {
+        console.log("starting");
+        let test = nextTest();
+        document.getElementById("test").innerText = test;
+        setTimeout(() => jtab.render(document.getElementById("tab"), test), settings.delayForTab);
+        displayTestTimeout = setTimeout(displayTest, settings.interval)
+      }
+
+      function processCommand(commandText) {
+        console.log(commandText);
+        let command = commands[commandText];
+        if (command) {
+          command();
+        }
+      }
+
+      function startVoiceCommands() {
+
+        if (window.hasOwnProperty('webkitSpeechRecognition')) {
+
+          var recognition = new webkitSpeechRecognition();
+
+          recognition.continuous = true;
+          recognition.interimResults = false;
+
+          recognition.lang = "en-US";
+          recognition.start();
+
+          recognition.onresult = function (event) {
+
+            for (var i = event.resultIndex; i < event.results.length; ++i) {
+              if (event.results[i].isFinal) {
+                processCommand(event.results[i][0].transcript.trim().toLowerCase());
+              }
+            }
+          };
+
+          recognition.onerror = function (e) {
+            recognition.stop();
+          }
+
+        }
+      }
+
+      function populateSidebar() {
+        Object.keys(commands).forEach(command => {
+          let li = document.createElement("li");
+          li.innerText = command;
+          document.getElementById("voiceCommands").append(li)
+        });
+
+        Object.keys(settings).forEach(key => {
+          let li = document.createElement("li");
+          li.innerText = `${key}: ${settings[key]}`;
+          document.getElementById("settings").append(li)
+        });
+      }
+
+      document.addEventListener("DOMContentLoaded", function (event) {
+        displayTest();
+        populateSidebar();
+        startVoiceCommands()
+      });
+    </script>
+    <style>
+        body {
+            background-color: #F1F1F1;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        ul {
+            padding-left: 0
+        }
+
+        #row {
+            display: flex;
+            width: 800px;
+            margin: 20px auto 0;
+        }
+
+        #sidebar {
+            background-color: #fff;
+            width: 25%;
+            margin-right: 10px;
+            padding: 30px 15px;
+        }
+
+        #main {
+            background-color: #fff;
+            padding-top: 30px;
+            width: 75%;
+        }
+
+        #statusMessage {
+            text-align: center;
+            height: 30px;
+        }
+
+        #statusMessage span {
+            opacity: 1;
+            transition: opacity 1s;
+        }
+
+        #statusMessage span.fade {
+            opacity: 0;
+        }
+
+        #container {
+            margin: 30px auto;
+            width: 200px;
+        }
+
+        #test {
+            font-size: 36px;
+            text-align: center;
+        }
+
+        #tab {
+            text-align: center;
+            padding: 30px;
+        }
+    </style>
+</head>
+<body>
+<div id="row">
+    <div id="sidebar">
+        Voice Commands
+        <ul id="voiceCommands"></ul>
+        Settings
+        <ul id="settings"></ul>
+    </div>
+    <div id="main">
+        <div id="statusMessage"></div>
+        <div id="container">
+            <div id="test"></div>
+            <div id="tab" class="jtab"></div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
